@@ -7,7 +7,7 @@ import Filters from "./components/Filters";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       <Navbar />
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">

@@ -63,7 +63,6 @@ export default function UserTable() {
                             />
                         </th>
                         <th className='py-3 px-4 font-medium text-gray-500'>User</th>
-                        <th className='py-3 px-4 font-medium text-gray-500'>Email</th>
                         <th className='py-3 px-4 font-medium text-gray-500'>Access</th>
                         <th className='py-3 px-4 font-medium text-gray-500'>Last Active</th>
                         <th className='py-3 px-4 font-medium text-gray-500'>Date Added</th>
@@ -94,7 +93,6 @@ export default function UserTable() {
                                     </div>
                                 </div>
                             </td>
-                            <td className='py-3 px-4'></td>
                             <td className='py-3 px-4'>
                                 <div className='flex flex-wrap gap-2'>
                                     {user.access.map((access, index) => {
