@@ -6,7 +6,7 @@ export default function Filters() {
     const [isAccessFilterOpen, setIsAccessFilterOpen] = useState(false);
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
     const [nameFilter, setNameFilter] = useState('');
-    const [selectedAccess, setSelectedAccess] = useState([]);
+    const [selectedAccess, setSelectedAccess] = useState<string[]>([]);
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
     const accessLevels = ['Admin', 'Data Export', 'Data Import'];
