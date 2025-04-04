@@ -51,7 +51,7 @@ export default function UserTable() {
 
     return (
         <div className='p-6 bg-white rounded-xl shadow-md'>
-            <table className='w-full text-left text-sm border-collapse'>
+            <table className='w-full text-left text-sm border-collapse '>
                 <thead>
                     <tr className='border-b'>
                         <th className='py-3 px-4 font-medium text-gray-500'>
