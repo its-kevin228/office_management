@@ -26,31 +26,51 @@ export default function UserTable() {
         { name: "Olivia Wilson", email: "olivia@untitledui.com", avatar: "/avatar.jpg", access: ["Admin", "Data Import"], lastActive: "Mar 6, 2024", dateAdded: "Jan 15, 2023" }
     ];
 
-    const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
+    const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
     const [selectAll, setSelectAll] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const handleSelectAll = () => {
         if (selectAll) {
             setSelectedUsers(new Set());
         } else {
-            setSelectedUsers(new Set(users.map((_, index) => index)));
+            const newSelected = new Set(filteredUsers.map(user => user.email));
+            setSelectedUsers(newSelected);
         }
         setSelectAll(!selectAll);
     };
 
-    const handleSelectUser = (index: number) => {
+    const handleSelectUser = (email: string) => {
         const newSelected = new Set(selectedUsers);
-        if (selectedUsers.has(index)) {
-            newSelected.delete(index);
+        if (selectedUsers.has(email)) {
+            newSelected.delete(email);
         } else {
-            newSelected.add(index);
+            newSelected.add(email);
         }
         setSelectedUsers(newSelected);
-        setSelectAll(newSelected.size === users.length);
+        setSelectAll(filteredUsers.every(user => newSelected.has(user.email)));
     };
+
+    const filteredUsers = users.filter(user => {
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+            user.name.toLowerCase().includes(searchTermLower) ||
+            user.email.toLowerCase().includes(searchTermLower) ||
+            user.access.some(access => access.toLowerCase().includes(searchTermLower))
+        );
+    });
 
     return (
         <div className='p-6 bg-white rounded-xl shadow-md'>
+            <div className='mb-4'>
+                <input
+                    type='text'
+                    placeholder='Rechercher par nom, email ou accès...'
+                    className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
             <table className='w-full text-left text-sm border-collapse '>
                 <thead>
                     <tr className='border-b'>
@@ -62,21 +82,21 @@ export default function UserTable() {
                                 onChange={handleSelectAll}
                             />
                         </th>
-                        <th className='py-3 px-4 font-medium text-gray-500'>User</th>
-                        <th className='py-3 px-4 font-medium text-gray-500'>Access</th>
-                        <th className='py-3 px-4 font-medium text-gray-500'>Last Active</th>
-                        <th className='py-3 px-4 font-medium text-gray-500'>Date Added</th>
+                        <th className='py-3 px-4 font-medium text-gray-800'>User</th>
+                        <th className='py-3 px-4 font-medium text-gray-800'>Access</th>
+                        <th className='py-3 px-4 font-medium text-gray-800'>Last Active</th>
+                        <th className='py-3 px-4 font-medium text-gray-800'>Date Added</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map((user, index) => (
+                    {filteredUsers.map((user, index) => (
                         <tr key={index} className='border-b hover:bg-gray-50 transition-colors duration-150 ease-in-out'>
                             <td className='py-3 px-4'>
                                 <input
                                     type="checkbox"
                                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200 ease-in-out cursor-pointer"
-                                    checked={selectedUsers.has(index)}
-                                    onChange={() => handleSelectUser(index)}
+                                    checked={selectedUsers.has(user.email)}
+                                    onChange={() => handleSelectUser(user.email)}
                                 />
                             </td>
                             <td className='py-3 px-4'>
