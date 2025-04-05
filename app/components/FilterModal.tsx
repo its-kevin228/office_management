@@ -4,34 +4,52 @@ import React, { useState, useEffect } from 'react';
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onApplyFilters: (filters: string[]) => void;
+    onApplyFilters: (filters: {
+        filters: string[];
+        sortOrder: string;
+    }) => void;
     activeFilters: string[];
 }
 
 export default function FilterModal({ isOpen, onClose, onApplyFilters, activeFilters }: FilterModalProps) {
     const [selectedFilters, setSelectedFilters] = useState<string[]>(activeFilters);
-
+    const [sortOrder, setSortOrder] = useState<string>('asc');
     const accessOptions = ['Admin', 'Data Export', 'Data Import'];
 
     useEffect(() => {
         setSelectedFilters(activeFilters);
     }, [activeFilters]);
 
+    const handleSortOrderChange = (order: string) => {
+        if (order !== 'asc' && order !== 'desc') return;
+        setSortOrder(order);
+    };
+
     const handleFilterChange = (access: string) => {
-        setSelectedFilters(prev => 
+        if (!accessOptions.includes(access)) return;
+        setSelectedFilters((prev) =>
             prev.includes(access)
-                ? prev.filter(a => a !== access)
+                ? prev.filter((a) => a !== access)
                 : [...prev, access]
         );
     };
 
     const handleApply = () => {
-        onApplyFilters(selectedFilters);
+        onApplyFilters({
+            filters: selectedFilters,
+            sortOrder
+        });
+        onClose();
     };
 
     const handleReset = () => {
         setSelectedFilters([]);
-        onApplyFilters([]);
+        setSortOrder('asc');
+        onApplyFilters({
+            filters: [],
+            sortOrder: 'asc'
+        });
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -45,18 +63,33 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, activeFil
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>
                 <div className="space-y-4">
                     {activeFilters.length > 0 && (
                         <div className="bg-blue-50 p-3 rounded-md">
-                            <p className="text-sm text-blue-700 font-medium mb-2">Filtres actifs :</p>
+                            <p className="text-sm text-blue-700 font-medium mb-2">
+                                Filtres actifs :
+                            </p>
                             <div className="flex flex-wrap gap-2">
                                 {activeFilters.map((filter) => (
-                                    <span key={filter} className="inline-flex items-center bg-blue-100 text-blue-700 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                                    <span
+                                        key={filter}
+                                        className="inline-flex items-center bg-blue-100 text-blue-700 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                    >
                                         {filter}
                                     </span>
                                 ))}
@@ -64,7 +97,9 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, activeFil
                         </div>
                     )}
                     <div>
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Niveau d'accès</h3>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">
+                            Niveau d'accès
+                        </h3>
                         <div className="space-y-2">
                             {accessOptions.map((access) => (
                                 <label key={access} className="flex items-center">
@@ -74,9 +109,44 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, activeFil
                                         onChange={() => handleFilterChange(access)}
                                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
-                                    <span className="ml-2 text-sm text-gray-700">{access}</span>
+                                    <span className="ml-2 text-sm text-gray-700">
+                                        {access}
+                                    </span>
                                 </label>
                             ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">
+                            Ordre alphabétique
+                        </h3>
+                        <div className="space-y-2">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="sortOrder"
+                                    value="asc"
+                                    checked={sortOrder === 'asc'}
+                                    onChange={() => handleSortOrderChange('asc')}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                    Ascendant
+                                </span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="sortOrder"
+                                    value="desc"
+                                    checked={sortOrder === 'desc'}
+                                    onChange={() => handleSortOrderChange('desc')}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                    Descendant
+                                </span>
+                            </label>
                         </div>
                     </div>
                     <div className="flex justify-between pt-4">
@@ -97,4 +167,4 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, activeFil
             </div>
         </div>
     );
-} 
+}

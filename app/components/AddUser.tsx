@@ -8,6 +8,7 @@ interface AddUserModalProps {
         name: string;
         email: string;
         access: string[];
+        avatar: string;
     }) => void;
 }
 
@@ -15,16 +16,65 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        access: [] as string[]
+        access: [] as string[],
+        avatar: '/avatar.jpg'
     });
+
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const accessOptions = ['Admin', 'Data Export', 'Data Import'];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onAddUser(formData);
-        setFormData({ name: '', email: '', access: [] });
+        if (!formData.name.trim() || !formData.email.trim()) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        if (formData.access.length === 0) {
+            alert('Please select at least one access level');
+            return;
+        }
+        onAddUser({
+            ...formData,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            avatar: selectedImage || '/avatar.jpg'
+        });
+        setFormData({ name: '', email: '', access: [], avatar: '/avatar.jpg' });
+        setSelectedImage(null);
         onClose();
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+            if (file.size > 5000000) { // 5MB limit
+                alert('Image size too large. Please choose an image under 5MB.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setSelectedImage(result);
+            };
+            reader.onerror = () => {
+                alert('Error reading image file');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
     };
 
     const handleAccessChange = (access: string) => {
@@ -53,6 +103,31 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                     </button>
                 </div>
                 <form onSubmit={handleSubmit}>
+                    <div className="mb-4 text-center">
+                        <div className="relative inline-block mb-4">
+                            <img
+                                src={selectedImage || '/avatar.jpg'}
+                                alt="Profile"
+                                className="w-24 h-24 rounded-full object-cover cursor-pointer border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                                onClick={handleImageClick}
+                            />
+                            <div
+                                className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors"
+                                onClick={handleImageClick}
+                            >
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleImageChange}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                        </div>
+                    </div>
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Nom complet
@@ -107,4 +182,4 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
             </div>
         </div>
     );
-} 
+}

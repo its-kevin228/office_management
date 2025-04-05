@@ -24,21 +24,31 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
     const [selectAll, setSelectAll] = useState(false);
 
     useEffect(() => {
+        setFilteredUsers(initialUsers);
+    }, [initialUsers]);
+
+    useEffect(() => {
+        setSelectedUsers(new Set());
+        setSelectAll(false);
+    }, [initialUsers]);
+
+    useEffect(() => {
         let result = initialUsers;
 
-        // Appliquer les filtres
+        // Apply access filters
         if (activeFilters.length > 0) {
             result = result.filter(user =>
                 activeFilters.every(filter => user.access.includes(filter))
             );
         }
 
-        // Appliquer la recherche
+        // Apply search filter
         if (searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase();
             result = result.filter(user => 
-                user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.access.some(access => access.toLowerCase().includes(searchTerm.toLowerCase()))
+                user.name.toLowerCase().includes(searchLower) ||
+                user.email.toLowerCase().includes(searchLower) ||
+                user.access.some(access => access.toLowerCase().includes(searchLower))
             );
         }
 
@@ -89,10 +99,10 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
                                     onChange={handleSelectAll}
                                 />
                             </th>
-                            <th className='py-3 px-4 font-medium text-gray-500'>User</th>
-                            <th className='py-3 px-4 font-medium text-gray-500'>Access</th>
-                            <th className='py-3 px-4 font-medium text-gray-500'>Last Active</th>
-                            <th className='py-3 px-4 font-medium text-gray-500'>Date Added</th>
+                            <th className='py-3 px-4 font-semibold text-gray-800'>User</th>
+                            <th className='py-3 px-4 font-semibold text-gray-800'>Access</th>
+                            <th className='py-3 px-4 font-semibold text-gray-800'>Last Active</th>
+                            <th className='py-3 px-4 font-semibold text-gray-800'>Date Added</th>
                         </tr>
                     </thead>
                     <tbody>
