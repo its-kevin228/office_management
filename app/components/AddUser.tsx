@@ -48,6 +48,13 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
         setFormData({ name: '', email: '', access: [], avatar: '/avatar.jpg' });
         setSelectedImage(null);
         onClose();
+
+        // Show success toast
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        toast.textContent = 'Utilisateur ajouté avec succès';
+        document.body.appendChild(toast);
+        setTimeout(() => document.body.removeChild(toast), 3000);
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
