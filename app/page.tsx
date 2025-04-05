@@ -26,7 +26,7 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState<string>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  const [users, setUsers] = useState<User[]>(defaultUsers);
+  const [users, setUsers] = useState<User[]>([...defaultUsers]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -55,6 +55,12 @@ export default function Home() {
 
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
+      const aIsAdmin = a.access.includes('Admin');
+      const bIsAdmin = b.access.includes('Admin');
+
+      if (aIsAdmin && !bIsAdmin) return -1;
+      if (!aIsAdmin && bIsAdmin) return 1;
+
       const compareResult = a.name.localeCompare(b.name);
       return sortOrder === 'asc' ? compareResult : -compareResult;
     });
@@ -132,14 +138,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold">All users <span className="text-gray-500">{filteredUsers.length}</span></h2>
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+          <div className="w-full lg:w-auto">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900">All users <span className="text-gray-500 ml-2">{filteredUsers.length}</span></h2>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
             <SearchBar onSearch={handleSearch} />
             <Filters
               onAddUser={handleAddUser}
@@ -148,12 +154,14 @@ export default function Home() {
             />
           </div>
         </div>
-        <UserTable searchTerm={searchTerm} users={paginatedUsers} activeFilters={activeFilters} />
-        <Pagination
-          totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-        />
+        <div className="space-y-6">
+          <UserTable searchTerm={searchTerm} users={paginatedUsers} activeFilters={activeFilters} />
+          <Pagination
+            totalItems={filteredUsers.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
     </div>
   );

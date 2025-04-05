@@ -13,6 +13,10 @@ interface FiltersProps {
     onApplyFilters: (filters: {
         filters: string[];
         sortOrder: string;
+        dateRange?: {
+            startDate: string;
+            endDate: string;
+        };
     }) => void;
     activeFilters: string[];
 }
@@ -24,6 +28,10 @@ export default function Filters({ onAddUser, onApplyFilters, activeFilters }: Fi
     const handleFilterApply = (filters: {
         filters: string[];
         sortOrder: string;
+        dateRange?: {
+            startDate: string;
+            endDate: string;
+        };
     }) => {
         onApplyFilters(filters);
         setIsFilterModalOpen(false);
@@ -31,12 +39,12 @@ export default function Filters({ onAddUser, onApplyFilters, activeFilters }: Fi
 
     return (
         <div className="relative">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <button
                     onClick={() => setIsFilterModalOpen(true)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center sm:justify-start">
                         <svg
                             className="w-5 h-5 mr-2"
                             fill="none"
@@ -61,7 +69,7 @@ export default function Filters({ onAddUser, onApplyFilters, activeFilters }: Fi
                 </button>
                 <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="btn btn-primary w-48 flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full sm:w-auto btn btn-primary flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                     <UserPlus className="w-5 h-5 mr-2" />
                     Add user
