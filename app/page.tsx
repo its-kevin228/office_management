@@ -202,7 +202,7 @@ export default function Home() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-2xl font-semibold">All users {filteredUsers.length}</h2>
+            <h2 className="text-2xl font-semibold">All users <span className="text-teal-500 ml-1">{filteredUsers.length}</span></h2>
           </div>
           <div className="flex items-center space-x-4">
             <SearchBar onSearch={handleSearch} />

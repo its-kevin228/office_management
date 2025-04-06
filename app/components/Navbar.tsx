@@ -34,14 +34,14 @@ export default function Navbar({ activeUser }: NavbarProps) {
     }, [activeUser]);
 
     return (
-        <nav className='flex justify-between items-center p-4 bg-white rounded-md'>
-            <div className='flex items-center space-x-4'>
-                <div className='ml-8'>
+        <nav className='flex flex-col md:flex-row justify-between items-start md:items-center p-8 bg-white rounded-md shadow-sm'>
+            <div className='flex items-center space-x-4 w-full md:w-auto mb-4 md:mb-0'>
+                <div className='ml-2 md:ml-8'>
                     <h1 className='text-xl font-semibold'>User management</h1>
-                    <p className='text-gray-500 text-sm mt-1'>Manage your team members and their account permissions here</p>
+                    <p className='text-gray-500 text-sm mt-1 md:block'>Manage your team members and their account permissions here</p>
                 </div>
             </div>
-            <div className='flex items-center space-x-2'>
+            <div className='flex items-center space-x-2 self-end md:self-center'>
                 <Image
                     src={activeUser?.avatar || defaultImage}
                     alt={userName}

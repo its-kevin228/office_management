@@ -49,6 +49,7 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
     const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
     const [showSingleExportModal, setShowSingleExportModal] = useState(false);
     const [singleExportFormat, setSingleExportFormat] = useState<'json' | 'excel'>('json');
+    const [dropdownPosition, setDropdownPosition] = useState<'up' | 'down'>('down');
 
     useEffect(() => {
         let result = initialUsers;
@@ -121,9 +122,28 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
         }
     };
 
-    const toggleDropdown = (index: number) => {
+    const toggleDropdown = (index: number, event: React.MouseEvent) => {
         console.log("toggleDropdown called with index:", index, "current openDropdown:", openDropdown);
-        setOpenDropdown(prevState => prevState === index ? null : index);
+
+        // Si le dropdown est ouvert, on le ferme
+        if (openDropdown === index) {
+            setOpenDropdown(null);
+            return;
+        }
+
+        // Sinon, on l'ouvre et on détermine sa position
+        setOpenDropdown(index);
+
+        // Récupérer la position du clic par rapport à la fenêtre
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+
+        // Vérifier si on est proche du bas de la fenêtre
+        const windowHeight = window.innerHeight;
+        const isNearBottom = windowHeight - buttonRect.bottom < 200; // 200px du bas
+
+        // Mémoriser la position pour que le dropdown s'affiche correctement
+        setDropdownPosition(isNearBottom ? 'up' : 'down');
     };
 
     // Simpler click outside handler
@@ -391,164 +411,261 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
                             </div>
                         </div>
                     </div>
-                    <table className='w-full text-left text-sm border-collapse'>
-                        <thead>
-                            <tr className='border-b'>
-                                <th className='py-3 px-4 font-medium text-gray-500'>
-                                    <input
-                                        type="checkbox"
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200 ease-in-out cursor-pointer"
-                                        checked={selectAll}
-                                        onChange={handleSelectAll}
-                                    />
-                                </th>
-                                <th className='py-3 px-4 font-medium text-gray-500'>User</th>
-                                <th className='py-3 px-4 font-medium text-gray-500'>Access</th>
-                                <th className='py-3 px-4 font-medium text-gray-500'>Last Active</th>
-                                <th className='py-3 px-4 font-medium text-gray-500'>Date Added</th>
-                                <th className='py-3 px-4 font-medium text-gray-500'>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map((user, index) => (
-                                <tr key={index} className='border-b hover:bg-gray-50 transition-colors duration-150 ease-in-out'>
-                                    <td className='py-3 px-4'>
+
+                    {/* Desktop view - Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className='w-full text-left text-sm border-collapse'>
+                            <thead>
+                                <tr className='border-b'>
+                                    <th className='py-3 px-4 font-medium text-gray-500'>
                                         <input
                                             type="checkbox"
                                             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200 ease-in-out cursor-pointer"
-                                            checked={selectedUsers.has(index)}
-                                            onChange={() => handleSelectUser(index)}
+                                            checked={selectAll}
+                                            onChange={handleSelectAll}
                                         />
-                                    </td>
-                                    <td className='py-3 px-4'>
-                                        <div className='flex items-center gap-3'>
-                                            <Image
-                                                src={user.avatar}
-                                                width={40}
-                                                height={40}
-                                                className='rounded-full object-cover'
-                                                style={{ width: '40px', height: '40px' }}
-                                                alt={user.name}
+                                    </th>
+                                    <th className='py-3 px-4 font-semibold text-gray-700'>User</th>
+                                    <th className='py-3 px-4 font-semibold text-gray-700'>Access</th>
+                                    <th className='py-3 px-4 font-semibold text-gray-700'>Last Active</th>
+                                    <th className='py-3 px-4 font-semibold text-gray-700'>Date Added</th>
+                                    <th className='py-3 px-4 font-semibold text-gray-700'>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredUsers.map((user, index) => (
+                                    <tr key={index} className='border-b hover:bg-gray-50 transition-colors duration-150 ease-in-out'>
+                                        <td className='py-3 px-4'>
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200 ease-in-out cursor-pointer"
+                                                checked={selectedUsers.has(index)}
+                                                onChange={() => handleSelectUser(index)}
                                             />
-                                            <div>
-                                                <div className='font-medium text-gray-900'>{user.name}</div>
-                                                <div className='text-sm text-gray-500'>{user.email}</div>
+                                        </td>
+                                        <td className='py-3 px-4'>
+                                            <div className='flex items-center'>
+                                                <div className='h-10 w-10 flex-shrink-0'>
+                                                    <Image src={user.avatar} alt={user.name} width={40} height={40} className='rounded-full object-cover' style={{ width: '40px', height: '40px' }} />
+                                                </div>
+                                                <div className='ml-4'>
+                                                    <div className='font-medium text-gray-900'>{user.name}</div>
+                                                    <div className='text-gray-500'>{user.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className='py-3 px-4'>
+                                            <div className='flex flex-wrap gap-2'>
+                                                {user.access.map((access, index) => {
+                                                    const badgeColor = getBadgeStyle(access);
+                                                    const permissionItem = AVAILABLE_PERMISSIONS.find(p => p.id === access);
+                                                    return (
+                                                        <span
+                                                            key={index}
+                                                            className={`inline-flex items-center ${badgeColor} rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 ease-in-out hover:opacity-80 cursor-pointer`}
+                                                            onClick={() => handlePermissionClick(access, user)}
+                                                        >
+                                                            {permissionItem ? permissionItem.label : access}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className='py-3 px-4 text-gray-500'>{user.lastActive}</td>
+                                        <td className='py-3 px-4 text-gray-500'>{user.dateAdded}</td>
+                                        <td className='py-3 px-4'>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => toggleDropdown(index, e)}
+                                                    className="dropdown-button text-gray-500 hover:bg-gray-100 rounded-full p-1.5 focus:outline-none"
+                                                >
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                                    </svg>
+                                                </button>
+                                                {openDropdown === index && (
+                                                    <div className={`dropdown-content absolute right-0 ${dropdownPosition === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[100]`}>
+                                                        <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log('View profile clicked for user:', user.name);
+                                                                    handleAction('view', user);
+                                                                }}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            >
+                                                                <span className="flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    View Profile
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log('Permissions clicked for user:', user.name);
+                                                                    handleAction('permissions', user);
+                                                                }}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            >
+                                                                <span className="flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Permissions
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    if (hasExportPermission()) {
+                                                                        handleAction('export', user);
+                                                                    }
+                                                                }}
+                                                                className={`block w-full text-left px-4 py-2 text-sm ${hasExportPermission() ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'}`}
+                                                                disabled={!hasExportPermission()}
+                                                            >
+                                                                <span className="flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Export User Data
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log('Delete clicked for user:', user.name);
+                                                                    handleAction('delete', user);
+                                                                }}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                            >
+                                                                <span className="flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Delete User
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile view - Cards */}
+                    <div className="md:hidden space-y-4">
+                        {filteredUsers.map((user, index) => (
+                            <div key={index} className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                                                checked={selectedUsers.has(index)}
+                                                onChange={() => handleSelectUser(index)}
+                                            />
+                                            <div className="flex items-center">
+                                                <Image
+                                                    src={user.avatar}
+                                                    alt={user.name}
+                                                    width={40} height={40}
+                                                    className="rounded-full object-cover"
+                                                    style={{ width: '40px', height: '40px' }}
+                                                />
+                                                <div className="ml-3">
+                                                    <div className="font-medium">{user.name}</div>
+                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className='py-3 px-4'>
-                                        <div className='flex flex-wrap gap-2'>
-                                            {user.access.map((access, index) => {
-                                                const badgeColor = getBadgeStyle(access);
-                                                const permissionItem = AVAILABLE_PERMISSIONS.find(p => p.id === access);
-                                                return (
-                                                    <span
-                                                        key={index}
-                                                        className={`inline-flex items-center ${badgeColor} rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 ease-in-out hover:opacity-80 cursor-pointer`}
-                                                        onClick={() => handlePermissionClick(access, user)}
-                                                    >
-                                                        {permissionItem ? permissionItem.label : access}
-                                                    </span>
-                                                );
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className='py-3 px-4 text-gray-500'>{user.lastActive}</td>
-                                    <td className='py-3 px-4 text-gray-500'>{user.dateAdded}</td>
-                                    <td className='py-3 px-4'>
                                         <div className="relative">
                                             <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    toggleDropdown(index);
-                                                    console.log("Dropdown button clicked for user:", user.name, "index:", index);
-                                                }}
-                                                className="dropdown-button text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded-md hover:bg-gray-100"
+                                                onClick={(e) => toggleDropdown(index, e)}
+                                                className="dropdown-button text-gray-500 hover:bg-gray-100 rounded-full p-1.5 focus:outline-none"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                                 </svg>
                                             </button>
                                             {openDropdown === index && (
-                                                <div
-                                                    className="dropdown-content absolute right-0 z-[200] mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                                >
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            console.log('View profile clicked for user:', user.name);
-                                                            handleAction('view', user);
-                                                        }}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                                            </svg>
-                                                            View profile
-                                                        </span>
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            console.log('Permissions clicked for user:', user.name);
-                                                            handleAction('permissions', user);
-                                                        }}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                            </svg>
-                                                            Permissions
-                                                        </span>
-                                                    </button>
-                                                    {hasExportPermission() && (
+                                                <div className={`dropdown-content absolute right-0 ${dropdownPosition === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[100]`}>
+                                                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
-                                                                console.log('Export clicked for user:', user.name);
-                                                                handleAction('export', user);
+                                                                handleAction('view', user);
                                                             }}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                         >
-                                                            <span className="flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                                </svg>
-                                                                Export Data
-                                                            </span>
+                                                            <span className="flex items-center">View Profile</span>
                                                         </button>
-                                                    )}
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            console.log('Delete clicked for user:', user.name);
-                                                            handleAction('delete', user);
-                                                        }}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                            </svg>
-                                                            Delete
-                                                        </span>
-                                                    </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                handleAction('permissions', user);
+                                                            }}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                        >
+                                                            <span className="flex items-center">Permissions</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                handleAction('delete', user);
+                                                            }}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                        >
+                                                            <span className="flex items-center">Delete User</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {user.access.map((access, i) => {
+                                            const badgeColor = getBadgeStyle(access);
+                                            const permissionItem = AVAILABLE_PERMISSIONS.find(p => p.id === access);
+                                            return (
+                                                <span
+                                                    key={i}
+                                                    className={`inline-flex items-center ${badgeColor} rounded-full px-2.5 py-0.5 text-xs font-medium`}
+                                                    onClick={() => handlePermissionClick(access, user)}
+                                                >
+                                                    {permissionItem ? permissionItem.label : access}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="flex justify-between text-xs text-gray-500 border-t pt-2">
+                                        <div>
+                                            <span className="font-medium">Last active:</span> {user.lastActive}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Added:</span> {user.dateAdded}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </>
             )}
 
@@ -768,28 +885,39 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
                             <div className="space-y-3">
                                 <div className="font-medium">Access permissions</div>
                                 <div className="space-y-3">
-                                    {AVAILABLE_PERMISSIONS.map((permission) => (
-                                        <div key={permission.id} className={`p-3 border rounded-lg hover:bg-gray-50 ${permission.id === 'User Management' && !editingPermissions.includes('Admin')
-                                            ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                                            }`}>
-                                            <div className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    id={`permission-${permission.id}`}
-                                                    checked={editingPermissions.includes(permission.id)}
-                                                    onChange={() => handlePermissionChange(permission.id)}
-                                                    className={`h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${permission.id === 'User Management' && !editingPermissions.includes('Admin')
-                                                        ? 'cursor-not-allowed' : 'cursor-pointer'
-                                                        }`}
-                                                    disabled={permission.id === 'User Management' && !editingPermissions.includes('Admin')}
-                                                />
-                                                <label htmlFor={`permission-${permission.id}`} className="ml-2 text-sm font-medium text-gray-700 cursor-pointer flex-1">
-                                                    {permission.label}
-                                                </label>
+                                    {AVAILABLE_PERMISSIONS.map((permission) => {
+                                        const isDisabled = permission.id === 'User Management' && !editingPermissions.includes('Admin');
+                                        return (
+                                            <div
+                                                key={permission.id}
+                                                className={`p-3 border rounded-lg transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 hover:border-blue-200 cursor-pointer'}`}
+                                                onClick={() => {
+                                                    if (!isDisabled) {
+                                                        handlePermissionChange(permission.id);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`permission-${permission.id}`}
+                                                        checked={editingPermissions.includes(permission.id)}
+                                                        onChange={() => {
+                                                            if (!isDisabled) {
+                                                                handlePermissionChange(permission.id);
+                                                            }
+                                                        }}
+                                                        className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 pointer-events-none"
+                                                        disabled={isDisabled}
+                                                    />
+                                                    <div className="ml-2 text-sm font-medium text-gray-700 flex-1">
+                                                        {permission.label}
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1 ml-7">{permission.description}</p>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-1 ml-7">{permission.description}</p>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -1053,3 +1181,4 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
         </div>
     );
 }
+
