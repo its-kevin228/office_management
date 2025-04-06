@@ -1181,4 +1181,3 @@ export default function UserTable({ searchTerm, users: initialUsers, activeFilte
         </div>
     );
 }
-
