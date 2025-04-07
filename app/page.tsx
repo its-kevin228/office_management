@@ -1,7 +1,6 @@
 "use client"
 import Navbar from "./components/Navbar";
 import UserTable from "./components/UserTable";
-import Pagination from "./components/Pagination";
 import SearchBar from "./components/SearchBar";
 import Filters from "./components/Filters";
 import AddUserModal from './components/AddUserModal';
@@ -222,11 +221,7 @@ export default function Home() {
           onUpdateUser={handleUpdateUser}
           onSetActiveUser={handleSetActiveUser}
         />
-        <Pagination
-          totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-        />
+        
       </div>
       <Notification
         message={notification.message}
